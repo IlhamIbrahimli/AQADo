@@ -8,7 +8,7 @@
 
 const int winWidth = 480;
 const int winHeight = 640;
-
+SDL_Surface* surfaces[20];
 SDL_Window* gameWindow = nullptr;
 SDL_Surface* winSurface = nullptr;
 SDL_Surface* bgSurface = nullptr;
@@ -41,6 +41,10 @@ bool init() {
 }
 
 bool loadImage(std::string imgPath, SDL_Surface** surface) {
+  if (*surface != nullptr) {
+    SDL_DestroySurface(*surface);
+    *surface = nullptr;
+  }
   std::string imagePath = imgPath;
   bool success = true;
   *surface = SDL_LoadBMP(imagePath.c_str());
@@ -50,12 +54,37 @@ bool loadImage(std::string imgPath, SDL_Surface** surface) {
     std::cout << "Cant load img with path:" << imagePath << std::endl;
 
   }
+  for (int j = 0; j < 20; j++) {
+    if (surfaces[j] == nullptr) {
+      surfaces[j] = *surface;
+    }
+  }
   return success;
 }
 
+
+bool destroyImage(SDL_Surface** surface) {
+  for (int i = 0; i <20; i++) {
+    if (*surface == surfaces[i] ) {
+      surfaces[i] == nullptr;
+    }
+  }
+
+  SDL_DestroySurface(*surface);
+  surface = nullptr;
+  return true;
+}
+
+
+
+
 bool close() {
-  SDL_DestroySurface(bgSurface);
-  bgSurface = nullptr;
+  for (int i = 0; i < 20; i++) {
+    if (surfaces[i] != nullptr) {
+      destroyImage(&surfaces[i]);
+    }
+  }
+  std::cout << surfaces;
   SDL_DestroyWindow(gameWindow);
   gameWindow = nullptr;
   winSurface = nullptr;
@@ -66,16 +95,23 @@ int main() {
   init();
   loadImage("bg.bmp", &bgSurface);
   bool quit = false;
+  bool skib = false;
   SDL_Event e;
+  //std::cout << surfaces[0];
   while (quit == false) {
     while (SDL_PollEvent(&e)) {
       if (e.type == SDL_EVENT_QUIT) {
         quit = true;
       }
+      else if (e.type == SDL_EVENT_KEY_DOWN) {
+        skib = true;
+      }
     }
 
-    SDL_FillSurfaceRect(winSurface, nullptr, SDL_MapSurfaceRGB(winSurface, rand() % 256, rand() % 256, rand() % 256));
-//    SDL_BlitSurface(bgSurface, nullptr, winSurface, nullptr);
+    SDL_FillSurfaceRect(winSurface, nullptr, SDL_MapSurfaceRGB(winSurface, 255, 255, 255));
+    if (skib) {
+      SDL_BlitSurface(bgSurface, nullptr, winSurface, nullptr);
+    }
     SDL_UpdateWindowSurface(gameWindow);
   }
   close();
