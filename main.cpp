@@ -17,6 +17,15 @@ SDL_Surface* blackSurface = nullptr;
 std::string p1Name = "Player 1";
 std::string p2Name = "Player 2";
 
+enum OverallState {
+  MENU,
+  PNAME,
+  GAME
+};
+
+
+enum OverallState state = MENU;
+
 bool init() {
   bool success = true;
   if (!SDL_Init(SDL_INIT_VIDEO)) {
@@ -91,28 +100,51 @@ bool close() {
   return true;
 }
 
+bool isColliding(SDL_Rect checkRect, int x, int y) {
+  if ((checkRect.x <= x && checkRect.x+w >= x) && (checkRect.y <= y && checkRect.y+h >= y)) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
+
 int main() {
   init();
-  loadImage("bg.bmp", &bgSurface);
+  loadImage("menu.bmp", &bgSurface);
   bool quit = false;
-  bool skib = false;
+  SDL_FillSurfaceRect(winSurface, nullptr, SDL_MapSurfaceRGB(winSurface, 255, 255, 255));
+  SDL_BlitSurface(bgSurface, nullptr, winSurface, nullptr);
+  SDL_UpdateWindowSurface(gameWindow);
+  
   SDL_Event e;
   //std::cout << surfaces[0];
   while (quit == false) {
-    while (SDL_PollEvent(&e)) {
-      if (e.type == SDL_EVENT_QUIT) {
-        quit = true;
-      }
-      else if (e.type == SDL_EVENT_KEY_DOWN) {
-        skib = true;
-      }
-    }
+    switch (state)
+    {
+    case MENU:
+      //blit buttons
+      break;
+    case PNAME:
+      break;
+    case GAME:
 
-    SDL_FillSurfaceRect(winSurface, nullptr, SDL_MapSurfaceRGB(winSurface, 255, 255, 255));
-    if (skib) {
-      SDL_BlitSurface(bgSurface, nullptr, winSurface, nullptr);
+      while (SDL_PollEvent(&e)) {
+        if (e.type == SDL_EVENT_QUIT) {
+          quit = true;
+        }
+        else if (e.type == SDL_EVENT_KEY_DOWN) {
+          
+        }
+      }
+      break;
+    
+    default:
+      break;
     }
-    SDL_UpdateWindowSurface(gameWindow);
+    
+
+
   }
   close();
   return 0;
