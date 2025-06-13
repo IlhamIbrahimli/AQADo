@@ -14,8 +14,19 @@ SDL_Surface* winSurface = nullptr;
 SDL_Surface* bgSurface = nullptr;
 SDL_Surface* redSurface = nullptr;
 SDL_Surface* blackSurface = nullptr;
+SDL_Surface* buttonUSurface = nullptr;
+SDL_Surface* buttonSSurface = nullptr;
 std::string p1Name = "Player 1";
 std::string p2Name = "Player 2";
+int mX, mY;
+int menuSelect = 0;
+SDL_Rect menuButton1 = {90,200,0,0};
+SDL_Rect menuButton2 = {90, 320, 0, 0};
+SDL_Rect menuButton3 = {90,440,0,0};
+
+
+
+
 
 enum OverallState {
   MENU,
@@ -112,18 +123,38 @@ bool isColliding(SDL_Rect checkRect, int x, int y) {
 int main() {
   init();
   loadImage("menu.bmp", &bgSurface);
+  loadImage("button_u.bmp", &buttonUSurface);
+  loadImage("button_s.bmp", &buttonSSurface);
+
   bool quit = false;
-  SDL_FillSurfaceRect(winSurface, nullptr, SDL_MapSurfaceRGB(winSurface, 255, 255, 255));
-  SDL_BlitSurface(bgSurface, nullptr, winSurface, nullptr);
-  SDL_UpdateWindowSurface(gameWindow);
+  
+  
   
   SDL_Event e;
   //std::cout << surfaces[0];
   while (quit == false) {
+    SDL_FillSurfaceRect(winSurface, nullptr, SDL_MapSurfaceRGB(winSurface, 255, 255, 255));
+    SDL_BlitSurface(bgSurface, nullptr, winSurface, nullptr);
+
     switch (state)
     {
     case MENU:
-      //blit buttons
+      SDL_GetMouseState(&mX,&mY);
+      if (isColliding(menuButton1, mX,mY)) {
+
+      }else if (isColliding(menuButton2,mX,mY)) {
+        
+      }else if (isColliding(menuButton3,mX,mY)) {
+        
+      }
+      while (SDL_PollEvent(&e)) {
+        if (e.type == SDL_EVENT_QUIT) {
+          quit = true;
+        }
+        else if (e.type == SDL_EVENT_KEY_DOWN) {
+          
+        }
+      }
       break;
     case PNAME:
       break;
@@ -144,7 +175,7 @@ int main() {
     }
     
 
-
+    SDL_UpdateWindowSurface(gameWindow);
   }
   close();
   return 0;
