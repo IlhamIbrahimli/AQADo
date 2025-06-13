@@ -141,18 +141,27 @@ int main() {
     case MENU:
       SDL_GetMouseState(&mX,&mY);
       if (isColliding(menuButton1, mX,mY)) {
-
+        menuSelect = 1;
       }else if (isColliding(menuButton2,mX,mY)) {
-        
+        menuSelect = 2;
       }else if (isColliding(menuButton3,mX,mY)) {
-        
+        menuSelect = 3;
+      }else {
+        menuSelect = 0;
       }
+      SDL_BlitSurface(menuSelect = 1 ? buttonSSurface : buttonUSurface, nullptr, winSurface, &menuButton1);
+      SDL_BlitSurface(menuSelect = 2 ? buttonSSurface : buttonUSurface, nullptr, winSurface, &menuButton2);
+      SDL_BlitSurface(menuSelect = 3 ? buttonSSurface : buttonUSurface, nullptr, winSurface, &menuButton3);
+
+
       while (SDL_PollEvent(&e)) {
         if (e.type == SDL_EVENT_QUIT) {
           quit = true;
         }
-        else if (e.type == SDL_EVENT_KEY_DOWN) {
-          
+        else if (e.type == SDL_MOUSEBUTTONDOWN) {
+          if (e.button == 0) {
+            //Do the fucking thing
+          }
         }
       }
       break;
