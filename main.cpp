@@ -2,10 +2,10 @@
 #include <iostream>
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
-#include <SDL3/SDL_mixer.h>
+//#include <SDL3/SDL_mixer.h>
 #include <string>
 #include <cmath> 
-
+#include <time.h>
 #define TILEOFFSET 72+50
 #define TILEXOFFSET 13
 #define TILEWIDTH 40
@@ -91,14 +91,15 @@ SDL_Rect p1piece1 = {p1X1, 640-(TILEOFFSET*p1.y1)+6, 40,40};
 SDL_Rect p1piece2 =  {p1X2, 640-(TILEOFFSET*p1.y2)+6, 40,40};
 SDL_Rect p2piece1 =  {p2X1, 640-(TILEOFFSET*p2.y1)+6, 40,40};
 SDL_Rect p2piece2 =  {p2X2, 640-(TILEOFFSET*p2.y2)+6, 40,40};
+
 SDL_Rect diceRect = {20,130,100,100};
 SDL_Surface* d1Surface = nullptr;
 SDL_Surface* d2Surface = nullptr;
 SDL_Surface* d3Surface = nullptr;
 SDL_Surface* d4Surface = nullptr;
 float dPos = 0;
-Mix_Music* bgMusic = nullptr;
-SDL_AudioDeviceID gameAudioId = 0;
+//Mix_Music* bgMusic = nullptr;
+//SDL_AudioDeviceID gameAudioId = 0;
 
 
 enum InGameState gameState = DICE;
@@ -120,7 +121,7 @@ bool init() {
     } else {
       winSurface = SDL_GetWindowSurface(gameWindow);
       //Set up Audio
-      SDL_AudioSpec auSpec;
+      /*SDL_AudioSpec auSpec;
       SDL_zero(auSpec);
       auSpec.format = SDL_AUDIO_F32;
       auSpec.channels = 2;
@@ -135,7 +136,7 @@ bool init() {
           std::cout << SDL_GetError();
           success = false;
         }
-      }
+      }*/
       
     }
   }
@@ -164,7 +165,7 @@ bool loadImage(std::string imgPath, SDL_Surface** surface) {
   return success;
 }
 
-bool loadMusic(std::string filename, Mix_Music** song) {
+/*bool loadMusic(std::string filename, Mix_Music** song) {
   bool success = true;
   *song = Mix_LoadMUS(filename.c_str());
   if(*song == nullptr) {
@@ -173,7 +174,7 @@ bool loadMusic(std::string filename, Mix_Music** song) {
     success = false;
   }
   return success;
-}
+}*/
 
 
 bool destroyImage(SDL_Surface** surface) {
@@ -182,16 +183,15 @@ bool destroyImage(SDL_Surface** surface) {
   return true;
 }
 
-bool destroyMusic(Mix_Music** song) {
+/*bool destroyMusic(Mix_Music** song) {
   Mix_FreeMusic(*song);
   *song = nullptr;
   return true;
-}
-
+}*/
 
 
 bool close() {
-  destroyMusic(&bgMusic);
+  //destroyMusic(&bgMusic);
 
 
   destroyImage(&winSurface);
@@ -205,9 +205,9 @@ bool close() {
   destroyImage(&d3Surface);
   destroyImage(&d4Surface);
   SDL_DestroyWindow(gameWindow);
-  Mix_CloseAudio();
-  SDL_CloseAudioDevice( gameAudioId );
-  gameAudioId = 0;
+  //Mix_CloseAudio();
+  //`SDL_CloseAudioDevice( gameAudioId );
+  //gameAudioId = 0;
   gameWindow = nullptr;
   winSurface = nullptr;
   return true;
@@ -218,6 +218,20 @@ bool isColliding(SDL_Rect checkRect, int x, int y) {
     return true;
   } else {
     return false;
+  }
+}
+
+bool canMove(int dice, int pos1, int pos2, int pieceMoving) {
+  int tempPos = pieceMoving == 0 ? pos1 : pos2;
+  int otherPiecePos = pieceMoving == 0 ? pos2 : pos1;
+  int actualDice = dice == 3 ? -1 : dice + 1;
+  
+  if (tempPos + actualDice == otherPiecePos && otherPiecePos != 1 && otherPiecePos != 5 && otherPiecePos != 11 ) {
+    return false;
+  } else if (actualDice == -1 and tempPos == 1) {
+    return false;
+  } else {
+    return true;
   }
 }
 
@@ -238,12 +252,25 @@ int main() {
   p2.colour = blackSurface; 
   bool quit = false;
   bool isSpinning = false; 
-  int numSpins = (rand() % 191) + 10  ;
-  int countedSpins = 0; 
-  loadMusic("bgMusic.wav", &bgMusic);
+  int numSpins = (rand() % 201) + 100  ;
+  std::cout << numSpins;
+  int countedSpins = 0;
+  bool alreadySpun = false;
+  int turn = 0;
+  // seed the randomness
+  srand(time(NULL));
+  //loadMusic("bgMusic.wav", &bgMusic);
   
-  Mix_PlayMusic(bgMusic, -1);
-  SDL_GetError();
+  //Mix_PlayMusic(bgMusic, -1);
+  //SDL_GetError();
+  //
+  //
+  // Movement of pieces Variables
+  int startPos = NULL;
+  int endPos = NULL;
+  int pieceMoving = NULL;
+
+
   SDL_Event e;
   //std::cout << surfaces[0];
   while (quit == false) {
@@ -313,8 +340,10 @@ int main() {
               quit = true;
             }
             else if (e.type == SDL_EVENT_MOUSE_BUTTON_DOWN) {
-              if (e.button.button == SDL_BUTTON_LEFT && isColliding(diceRect,mX,mY) && !isSpinning) { 
+              if (e.button.button == SDL_BUTTON_LEFT && isColliding(diceRect,mX,mY) && !isSpinning && !alreadySpun) { 
                 isSpinning = true;
+                alreadySpun = true;
+
               }
             }
           }
@@ -330,10 +359,77 @@ int main() {
             isSpinning = false;
             numSpins = (rand() % 201) + 100  ;
             countedSpins = 0;
+            gameState = turn % 2 == true ? P1TURN : P2TURN;
           }
 
           break;
-      }
+        case P1TURN:
+          SDL_GetMouseState(&mX, &mY);
+          while (SDL_PollEvent(&e)) {
+            if (e.type == SDL_EVENT_QUIT) {
+              quit = true;
+            }
+            else if (e.type == SDL_EVENT_MOUSE_BUTTON_DOWN) {
+              if (e.button.button == SDL_BUTTON_LEFT) {
+                if(isColliding(p1piece1,mX,mY)) {
+                  bool move = canMove((int)std::floor(dPos), p1.y1,p1.y2, 0  );    
+                  if (move) {
+                    gameState = MOVING;
+                    pieceMoving = 0;
+                    endPos = p1.y1 + ((int)std::floor(dPos) ? (int)std::floor(dPos) : -1);
+
+                  }
+                } else if(isColliding(p1piece2,mX,mY)) {
+                  bool move = canMove((int)std::floor(dPos), p1.y2,p1.y1, 0  );    
+                  if (move) {
+                    gameState = MOVING;
+                    pieceMoving = 1;
+                    endPos = p1.y2 + ((int)std::floor(dPos) ? (int)std::floor(dPos) : -1);
+                  }
+                }
+              }
+            }
+          }
+ 
+          break;
+        case P2TURN:
+          SDL_GetMouseState(&mX, &mY);
+          while (SDL_PollEvent(&e)) {
+            if (e.type == SDL_EVENT_QUIT) {
+              quit = true;
+            }
+            else if (e.type == SDL_EVENT_MOUSE_BUTTON_DOWN) {
+              if (e.button.button == SDL_BUTTON_LEFT) {
+                if(isColliding(p2piece1,mX,mY)) {
+                  bool move = canMove((int)std::floor(dPos), p2.y1,p2.y2, 0  );    
+                  if (move) {
+                    gameState = MOVING;
+                    pieceMoving = 0;
+                    endPos = p2.y1 + ((int)std::floor(dPos) ? (int)std::floor(dPos) : -1);
+                  }
+                } else if(isColliding(p2piece2,mX,mY)) {
+                  bool move = canMove((int)std::floor(dPos), p2.y2,p2.y1, 0  );    
+                  if (move) {
+                    gameState = MOVING;
+                    pieceMoving = 0;
+                    endPos = p2.y2 + ((int)std::floor(dPos) ? (int)std::floor(dPos) : -1);
+                  }
+                }
+              }
+            }
+          }
+
+          break;
+        case MOVING:
+          while(SDL_PollEvent(&e)) {
+            if(e.type == SDL_EVENT_QUIT) {
+              quit = true;
+            }
+          }
+
+
+
+      } 
 
 
       
